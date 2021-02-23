@@ -265,6 +265,10 @@ GPIO_TypeDef* ButtonMatrixPort[8] = {GPIOA, GPIOB, GPIOB, GPIOB, GPIOA, GPIOC, G
 
 uint16_t ButtonMatrixPin[8] = {GPIO_PIN_10, GPIO_PIN_3, GPIO_PIN_5, GPIO_PIN_4, GPIO_PIN_9, GPIO_PIN_7,GPIO_PIN_6, GPIO_PIN_7};
 
+uint32_t DataMyID[11] = {64, 512, 1024, 16, 4096, 32, 4096, 4096, 4096, 4096, 32};
+
+//uint16_t DataPostOffice = 0;
+
 uint32_t DataMemory[11] = {0};
 
 uint16_t DataPostman = 0;
@@ -284,15 +288,39 @@ void ButtonMatrixUpdate()
 			if(PinState == GPIO_PIN_RESET) // Button press
 			{
 				ButtonMatrixState |= (uint16_t)1 << (i + ButtonMatrixRow * 4);	//0b00000000000000000000000000 | 0b1000
-				if(DataCount == 11)
+				DataPostman = ButtonMatrixState;
+				if(DataPostman == 8) // Press to clear
 				{
-					DataCount += 0;
+					DataPostman = 0;
+					DataCount = 0;
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+					// Clear DataMemory
+					int j;
+					for(j = 0; j<11;j+=1)
+					{
+						DataMemory[j] = 0;
+					}
 				}
-				else
+				else if(DataPostman == 32768) // Press to OK
 				{
-					DataPostman = ButtonMatrixState;
-					DataMemory[DataCount] = DataPostman;
-					DataCount += 1;
+					// Check Data input
+					if(DataMyID == DataMemory)
+					{
+						HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+					}
+				}
+				else // Press to enter data
+				{
+					if(DataCount == 11)
+					{
+						DataCount += 0;
+					}
+					else
+					{
+						DataPostman = ButtonMatrixState;
+						DataMemory[DataCount] = DataPostman;
+						DataCount += 1;
+					}
 				}
 			}
 			else
@@ -315,15 +343,6 @@ void ButtonMatrixUpdate()
 		HAL_GPIO_WritePin(ButtonMatrixPort[NextOutputPin],
 				ButtonMatrixPin[NextOutputPin], GPIO_PIN_RESET);
 
-		// Check Data input
-		if(DataMemory[1] == 4)
-		{
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
-		}
-		else
-		{
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
-		}
 	}
 }
 /* USER CODE END 4 */
