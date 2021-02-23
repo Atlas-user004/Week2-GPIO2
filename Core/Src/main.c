@@ -265,6 +265,12 @@ GPIO_TypeDef* ButtonMatrixPort[8] = {GPIOA, GPIOB, GPIOB, GPIOB, GPIOA, GPIOC, G
 
 uint16_t ButtonMatrixPin[8] = {GPIO_PIN_10, GPIO_PIN_3, GPIO_PIN_5, GPIO_PIN_4, GPIO_PIN_9, GPIO_PIN_7,GPIO_PIN_6, GPIO_PIN_7};
 
+uint32_t DataMemory[11] = {0};
+
+uint16_t DataPostman = 0;
+
+uint8_t DataCount = 0;
+
 uint8_t ButtonMatrixRow = 0; // What R now
 void ButtonMatrixUpdate()
 {
@@ -278,6 +284,16 @@ void ButtonMatrixUpdate()
 			if(PinState == GPIO_PIN_RESET) // Button press
 			{
 				ButtonMatrixState |= (uint16_t)1 << (i + ButtonMatrixRow * 4);	//0b00000000000000000000000000 | 0b1000
+				if(DataCount == 11)
+				{
+					DataCount += 0;
+				}
+				else
+				{
+					DataPostman = ButtonMatrixState;
+					DataMemory[DataCount] = DataPostman;
+					DataCount += 1;
+				}
 			}
 			else
 			{
@@ -300,7 +316,7 @@ void ButtonMatrixUpdate()
 				ButtonMatrixPin[NextOutputPin], GPIO_PIN_RESET);
 
 		// Check Data input
-		if(ButtonMatrixState == 0b10)
+		if(DataMemory[1] == 4)
 		{
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
 		}
