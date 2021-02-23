@@ -95,6 +95,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
 
   /* USER CODE END 2 */
 
@@ -265,15 +266,15 @@ GPIO_TypeDef* ButtonMatrixPort[8] = {GPIOA, GPIOB, GPIOB, GPIOB, GPIOA, GPIOC, G
 
 uint16_t ButtonMatrixPin[8] = {GPIO_PIN_10, GPIO_PIN_3, GPIO_PIN_5, GPIO_PIN_4, GPIO_PIN_9, GPIO_PIN_7,GPIO_PIN_6, GPIO_PIN_7};
 
-uint32_t DataMyID[11] = {64, 512, 1024, 16, 4096, 32, 4096, 4096, 4096, 4096, 32};
+uint32_t DataMyID[11] = {64, 512, 1024, 16, 4096, 32, 4096, 4096, 4096, 4096, 32}; // My ID is 62340500005
 
-//uint16_t DataPostOffice = 0;
+uint32_t DataMemory[11] = {0}; // Storage data that input
 
-uint32_t DataMemory[11] = {0};
+uint16_t DataPostman = 0; // Save data that input and bring them to DataMemory
 
-uint16_t DataPostman = 0;
+uint8_t DataCount = 0; // Count data that input to storage(DataMemory)
 
-uint8_t DataCount = 0;
+uint8_t CheckCount = 0; // Count evaluation between data in DataMemory and data in DataMyID
 
 uint8_t ButtonMatrixRow = 0; // What R now
 void ButtonMatrixUpdate()
@@ -293,10 +294,11 @@ void ButtonMatrixUpdate()
 				{
 					DataPostman = 0;
 					DataCount = 0;
+					CheckCount = 0;
 					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
 					// Clear DataMemory
 					int j;
-					for(j = 0; j<11;j+=1)
+					for(j = 0;j<11;j+=1)
 					{
 						DataMemory[j] = 0;
 					}
@@ -304,7 +306,15 @@ void ButtonMatrixUpdate()
 				else if(DataPostman == 32768) // Press to OK
 				{
 					// Check Data input
-					if(DataMyID == DataMemory)
+					int k;
+					for(k = 0;k<11;k+=1)
+					{
+						if(DataMyID[k] == DataMemory[k])
+						{
+							CheckCount += 1;
+						}
+					}
+					if(CheckCount == 11) // Check that all of data is true.
 					{
 						HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
 					}
